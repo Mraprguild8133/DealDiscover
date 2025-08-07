@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: shopsavvy-telegram-bot
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    region: oregon
+    branch: main
+    healthCheckPath: /health
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: RENDER
+        value: true
+      - key: PORT
+        value: 10000
+    buildCommand: pip install -r render-requirements.txt
+    startCommand: python render_main.py
+    autoDeploy: true
+    disk:
+      name: shopsavvy-data
+      mountPath: /data
+      sizeGB: 1

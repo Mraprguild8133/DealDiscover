@@ -1,0 +1,5 @@
+python-telegram-bot==21.3
+httpx>=0.27,<0.29
+anyio>=4.0.0
+certifi
+flask>=2.3.0
