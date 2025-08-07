@@ -13,7 +13,7 @@ services:
       - key: RENDER
         value: true
       - key: PORT
-        value: 10000
+        value: 5000
     buildCommand: pip install -r render-requirements.txt
     startCommand: python run_with_dashboard.py
     autoDeploy: true
