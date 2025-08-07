@@ -3,18 +3,10 @@
 ShopSavvy - Telegram Bot for Finding Deals Across Indian E-commerce Platforms
 """
 import logging
-import os
-from telegram import Update
 from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler, 
-    ConversationHandler, MessageHandler, filters,
-    ContextTypes
+    ConversationHandler, MessageHandler, filters
 )
-from fastapi import FastAPI, Request, Response
-import uvicorn
-from pathlib import Path
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 
 from config import BOT_TOKEN, PLATFORM_SELECTION, PRODUCT_SEARCH, CATEGORY_SEARCH
 from bot_handlers import (
@@ -30,8 +22,16 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Set up templates directory
-BASE_DIR = Path(__file__).parent
+def main():
+    """Main function to run the bot"""
+    
+    # Validate bot token
+    if BOT_TOKEN == "your_bot_token_here":
+        logger.error("Please set TELEGRAM_BOT_TOKEN environment variable")
+        return
+
+    # Set up templates directory
+BASE_DIR = Path(file).parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 def create_web_app(app: Application) -> FastAPI:
@@ -70,11 +70,6 @@ def create_web_app(app: Application) -> FastAPI:
 
 def main():
     """Main function to run the bot"""
-    
-    # Validate bot token
-    if BOT_TOKEN == "TELEGRAM_BOT_TOKEN":
-        logger.error("Please set TELEGRAM_BOT_TOKEN environment variable")
-        return
     
     # Create application
     app = Application.builder().token(BOT_TOKEN).build()
@@ -116,6 +111,7 @@ def main():
     logger.info("🤖 ShopSavvy Bot is starting...")
     logger.info("🔍 Ready to help users find the best deals!")
 
+            
     # Get port from environment variable or use default
     port = int(os.environ.get('PORT', 8443))
             
@@ -150,5 +146,5 @@ def main():
         logger.error(f"Failed to start bot: {e}")
         logger.info("Make sure TELEGRAM_BOT_TOKEN is set correctly")
 
-if __name__ == '__main__':
+if name == 'main':
     main()
