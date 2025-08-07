@@ -13,7 +13,7 @@ WEBAPP_PORT = int(os.getenv("PORT", 10000))  # Render provides PORT environment 
 
 # Webhook Configuration
 WEBHOOK_URL = os.getenv("WEBHOOK_URL", "")  # Set this in Render.com environment variables
-WEBHOOK_PATH = f"/webhook/{BOT_TOKEN}"  # Unique path for your webhook
+WEBHOOK_PATH = f"/templates/index.html/{BOT_TOKEN}"  # Unique path for your webhook
 WEBHOOK_URL_FULL = f"{WEBHOOK_URL}{WEBHOOK_PATH}" if WEBHOOK_URL else ""
 
 # ======================
