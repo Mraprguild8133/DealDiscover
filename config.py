@@ -1,75 +1,139 @@
 """
-Configuration file for the Telegram bot (Render.com compatible)
+ShopSavvy Bot Configuration (Render.com compatible)
+Complete configuration with all required settings
 """
+
 import os
 import logging
+from typing import Dict, List, Optional
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # ======================
-# Bot Configuration
+# Core Bot Configuration
 # ======================
-BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
-WEBAPP_HOST = "0.0.0.0"  # Required for Render.com
-WEBAPP_PORT = int(os.getenv("PORT", 10000))  # Render provides PORT environment variable
+class BotConfig:
+    TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
+    NAME: str = os.getenv("BOT_NAME", "ShopSavvy")
+    ADMIN_IDS: List[int] = [int(id) for id in os.getenv("ADMIN_IDS", "").split(",") if id]
+    DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
+    MAINTENANCE: bool = os.getenv("MAINTENANCE", "False").lower() == "true"
 
+# ======================
+# Server Configuration
+# ======================
+class ServerConfig:
+    HOST: str = os.getenv("HOST", "0.0.0.0")
+    PORT: int = int(os.getenv("PORT", "10000"))
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-here")
+
+# ======================
 # Webhook Configuration
-WEBHOOK_URL = os.getenv("WEBHOOK_URL", "")  # Set this in Render.com environment variables
-WEBHOOK_PATH = f"/webhook/{BOT_TOKEN}"  # Unique path for your webhook
-WEBHOOK_URL_FULL = f"{WEBHOOK_URL}{WEBHOOK_PATH}" if WEBHOOK_URL else ""
+# ======================
+class WebhookConfig:
+    URL: str = os.getenv("WEBHOOK_URL", "")
+    PATH: str = f"/webhook/{BotConfig.TOKEN}"
+    FULL_URL: str = f"{URL}{PATH}" if URL else ""
+    SECRET: Optional[str] = os.getenv("WEBHOOK_SECRET")
+
+# ======================
+# Database Configuration
+# ======================
+class DatabaseConfig:
+    URL: str = os.getenv("DATABASE_URL", "sqlite:///deals.db")
+    ECHO: bool = os.getenv("DB_ECHO", "False").lower() == "true"
+    POOL_SIZE: int = int(os.getenv("DB_POOL_SIZE", "5"))
+
+# ======================
+# E-commerce Platforms
+# ======================
+PLATFORMS: Dict[str, Dict[str, str]] = {
+    'flipkart': {
+        'name': 'Flipkart',
+        'emoji': '🛒',
+        'base_url': 'https://www.flipkart.com'
+    },
+    'amazon': {
+        'name': 'Amazon',
+        'emoji': '📦',
+        'base_url': 'https://www.amazon.in'
+    },
+    'meesho': {
+        'name': 'Meesho',
+        'emoji': '🛍️',
+        'base_url': 'https://www.meesho.com'
+    },
+    'myntra': {
+        'name': 'Myntra',
+        'emoji': '👗',
+        'base_url': 'https://www.myntra.com'
+    }
+}
+
+# ======================
+# Product Categories
+# ======================
+CATEGORIES: Dict[str, List[str]] = {
+    'electronics': ['Mobile', 'Laptop', 'Tablet', 'Camera', 'Headphones'],
+    'fashion': ['Shirt', 'Jeans', 'Dress', 'Shoes', 'Watch'],
+    'home': ['Furniture', 'Appliances', 'Decor', 'Kitchenware'],
+    'beauty': ['Skincare', 'Makeup', 'Haircare', 'Fragrance']
+}
+
+# ======================
+# Deal Types
+# ======================
+DEAL_TYPES: Dict[str, str] = {
+    'percentage': 'Percentage Discount',
+    'bogo': 'Buy One Get One',
+    'cashback': 'Cashback Offer',
+    'clearance': 'Clearance Sale',
+    'festival': 'Festival Special'
+}
+
+# ======================
+# Conversation States
+# ======================
+class States:
+    (
+        START,
+        PLATFORM_SELECTION,
+        PRODUCT_SEARCH,
+        CATEGORY_SELECTION,
+        DEAL_TYPE_SELECTION,
+        PRICE_ALERT_SETUP,
+        FEEDBACK,
+        ADMIN_PANEL
+    ) = range(8)
 
 # ======================
 # Logging Configuration
 # ======================
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+    level=logging.DEBUG if BotConfig.DEBUG else logging.INFO,
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('shopsavvy.log')
+    ]
 )
 logger = logging.getLogger(__name__)
 
 # ======================
-# Conversation States
+# Configuration Validation
 # ======================
-(PLATFORM_SELECTION, PRODUCT_SEARCH, CATEGORY_SEARCH, 
- DEAL_TYPE_SELECTION, PRICE_ALERT) = range(5)
-
-# ======================
-# Platform Configuration
-# ======================
-PLATFORM_EMOJIS = {
-    'flipkart': '🛒',
-    'amazon': '📦',
-    'meesho': '🛍️',
-    'myntra': '👗',
-    'all': '🔍'
-}
-
-CATEGORIES = [
-    'Mobile', 'Television', 'Shirt', 'Electronics', 'Fashion', 
-    'Home & Kitchen', 'Books', 'Sports & Fitness', 
-    'Beauty & Personal Care', 'Automotive'
-]
-
-DEAL_TYPES = [
-    'Percentage Discounts', 'BOGO Offers', 'Bank Discounts', 
-    'Clearance Sales', 'Cashback Offers'
-]
-
-# ======================
-# Database Configuration
-# ======================
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///deals.db")  # For Render PostgreSQL
-
-# ======================
-# Deployment Checks
-# ======================
-def check_config():
-    """Validate essential configuration"""
-    if not BOT_TOKEN:
-        logger.error("TELEGRAM_BOT_TOKEN not set!")
-        raise ValueError("Telegram bot token is required")
+def validate_config():
+    """Validate all required configurations"""
+    if not BotConfig.TOKEN:
+        logger.error("TELEGRAM_BOT_TOKEN is required!")
+        raise ValueError("Telegram bot token not configured")
     
-    if WEBHOOK_URL and not WEBHOOK_URL.startswith(('http://', 'https://')):
+    if WebhookConfig.URL and not WebhookConfig.URL.startswith(('http://', 'https://')):
         logger.error("Invalid WEBHOOK_URL format")
         raise ValueError("WEBHOOK_URL must start with http:// or https://")
+    
+    logger.info("Configuration validated successfully")
 
-# Validate on import
-check_config()
+validate_config()
