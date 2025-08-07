@@ -58,7 +58,7 @@ def main():
     signal.signal(signal.SIGTERM, signal_handler)
     
     # Check required environment variables
-    required_vars = ['TELEGRAM_BOT_TOKEN', 'OMDB_API_KEY']
+    required_vars = ['TELEGRAM_BOT_TOKEN']
     missing_vars = [var for var in required_vars if not os.getenv(var)]
     
     if missing_vars:
