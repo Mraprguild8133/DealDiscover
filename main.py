@@ -3,6 +3,7 @@
 ShopSavvy - Telegram Bot for Finding Deals Across Indian E-commerce Platforms
 """
 import logging
+import os
 from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler, 
     ConversationHandler, MessageHandler, filters
@@ -70,14 +71,30 @@ def main():
     logger.info("🤖 ShopSavvy Bot is starting...")
     logger.info("🔍 Ready to help users find the best deals!")
 
+    # Get port from environment variable or use default
+    port = int(os.environ.get('PORT', 8443))
             
     # Start the bot
     try:
-        # Use polling for development (webhook for production)
-        app.run_polling(
-            allowed_updates=['message', 'callback_query'],
-            drop_pending_updates=True
-        )
+        if 'RENDER' in os.environ:
+            # Webhook configuration for Render
+            webhook_url = f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME')}/{BOT_TOKEN}"
+            app.run_webhook(
+                listen="0.0.0.0",
+                port=port,
+                webhook_url=webhook_url,
+                url_path=BOT_TOKEN,
+                allowed_updates=['message', 'callback_query'],
+                drop_pending_updates=True
+            )
+            logger.info(f"🌐 Webhook configured at {webhook_url}")
+        else:
+            # Use polling for local development
+            app.run_polling(
+                allowed_updates=['message', 'callback_query'],
+                drop_pending_updates=True
+            )
+            logger.info("🔌 Using polling method (local development)")
     except Exception as e:
         logger.error(f"Failed to start bot: {e}")
         logger.info("Make sure TELEGRAM_BOT_TOKEN is set correctly")
