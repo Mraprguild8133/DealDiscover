@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-ShopSavvy - Telegram Bot for Finding Deals Across Indian E-commerce Platforms
+#ShopSavvy - Telegram Bot for Finding Deals Across Indian E-commerce Platforms
 import logging
 import os
 from telegram.ext import (
