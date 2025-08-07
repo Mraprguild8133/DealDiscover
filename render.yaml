@@ -15,7 +15,7 @@ services:
       - key: PORT
         value: 10000
     buildCommand: pip install -r render-requirements.txt
-    startCommand: python render_main.py
+    startCommand: python main.py
     autoDeploy: true
     disk:
       name: shopsavvy-data
