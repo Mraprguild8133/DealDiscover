@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  movie-bot:
+  DealDiscover:
     build: .
-    container_name: telegram-movie-bot
+    container_name: ShopSavvy
     ports:
       - "5000:5000"
     environment:
