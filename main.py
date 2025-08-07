@@ -29,47 +29,6 @@ def main():
     if BOT_TOKEN == "your_bot_token_here":
         logger.error("Please set TELEGRAM_BOT_TOKEN environment variable")
         return
-
-    # Set up templates directory
-BASE_DIR = Path(file).parent
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
-
-def create_web_app(app: Application) -> FastAPI:
-    """Create FastAPI app for webhook and status endpoint"""
-    web_app = FastAPI(title="ShopSavvy Bot")
-    
-    # Mount static files
-    web_app.mount("/static", StaticFiles(directory="static"), name="static")
-    
-    @web_app.get("/")
-    async def index(request: Request):
-        """Main landing page"""
-        return templates.TemplateResponse(
-            "index.html",
-            {"request": request, "bot_username": app.bot.username}
-        )
-    
-    @web_app.get("/status")
-    async def status():
-        """Health check endpoint"""
-        return {
-            "status": "running",
-            "bot": app.bot.username,
-            "webhook_set": app.updater is not None
-        }
-    
-    @web_app.post(f"/{BOT_TOKEN}")
-    async def telegram_webhook(request: Request):
-        """Handle incoming Telegram updates"""
-        json_data = await request.json()
-        update = Update.de_json(json_data, app.bot)
-        await app.process_update(update)
-        return Response(status_code=200)
-    
-    return web_app
-
-def main():
-    """Main function to run the bot"""
     
     # Create application
     app = Application.builder().token(BOT_TOKEN).build()
@@ -112,39 +71,16 @@ def main():
     logger.info("🔍 Ready to help users find the best deals!")
 
             
-    # Get port from environment variable or use default
-    port = int(os.environ.get('PORT', 8443))
-            
     # Start the bot
     try:
-        if 'RENDER' in os.environ or 'WEBHOOK' in os.environ:
-            # Webhook configuration for production
-            web_app = create_web_app(app)
-            
-            @web_app.on_event("startup")
-            async def on_startup():
-                await app.initialize()
-                await app.start()
-                webhook_url = f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME')}/{BOT_TOKEN}"
-                await app.bot.set_webhook(webhook_url)
-                logger.info(f"🌐 Webhook configured at {webhook_url}")
-            
-            uvicorn.run(
-                web_app,
-                host="0.0.0.0",
-                port=port,
-                ssl_certfile=None,
-            )
-        else:
-            # Use polling for local development
-            app.run_polling(
-                allowed_updates=['message', 'callback_query'],
-                drop_pending_updates=True
-            )
-            logger.info("🔌 Using polling method (local development)")
+        # Use polling for development (webhook for production)
+        app.run_polling(
+            allowed_updates=['message', 'callback_query'],
+            drop_pending_updates=True
+        )
     except Exception as e:
         logger.error(f"Failed to start bot: {e}")
         logger.info("Make sure TELEGRAM_BOT_TOKEN is set correctly")
 
-if name == 'main':
+if __name__ == '__main__':
     main()
