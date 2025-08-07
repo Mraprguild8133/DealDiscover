@@ -9,7 +9,7 @@ import logging
 # ======================
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 WEBAPP_HOST = "0.0.0.0"  # Required for Render.com
-WEBAPP_PORT = int(os.getenv("PORT", 8000))  # Render provides PORT environment variable
+WEBAPP_PORT = int(os.getenv("PORT", 5000))  # Render provides PORT environment variable
 
 # Webhook Configuration
 WEBHOOK_URL = os.getenv("WEBHOOK_URL", "")  # Set this in Render.com environment variables
