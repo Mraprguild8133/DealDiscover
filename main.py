@@ -4,10 +4,17 @@ ShopSavvy - Telegram Bot for Finding Deals Across Indian E-commerce Platforms
 """
 import logging
 import os
+from telegram import Update
 from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler, 
-    ConversationHandler, MessageHandler, filters
+    ConversationHandler, MessageHandler, filters,
+    ContextTypes
 )
+from fastapi import FastAPI, Request, Response
+import uvicorn
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 from config import BOT_TOKEN, PLATFORM_SELECTION, PRODUCT_SEARCH, CATEGORY_SEARCH
 from bot_handlers import (
@@ -22,6 +29,44 @@ logging.basicConfig(
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
+
+# Set up templates directory
+BASE_DIR = Path(__file__).parent
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+
+def create_web_app(app: Application) -> FastAPI:
+    """Create FastAPI app for webhook and status endpoint"""
+    web_app = FastAPI(title="ShopSavvy Bot")
+    
+    # Mount static files
+    web_app.mount("/static", StaticFiles(directory="static"), name="static")
+    
+    @web_app.get("/")
+    async def index(request: Request):
+        """Main landing page"""
+        return templates.TemplateResponse(
+            "index.html",
+            {"request": request, "bot_username": app.bot.username}
+        )
+    
+    @web_app.get("/status")
+    async def status():
+        """Health check endpoint"""
+        return {
+            "status": "running",
+            "bot": app.bot.username,
+            "webhook_set": app.updater is not None
+        }
+    
+    @web_app.post(f"/{BOT_TOKEN}")
+    async def telegram_webhook(request: Request):
+        """Handle incoming Telegram updates"""
+        json_data = await request.json()
+        update = Update.de_json(json_data, app.bot)
+        await app.process_update(update)
+        return Response(status_code=200)
+    
+    return web_app
 
 def main():
     """Main function to run the bot"""
@@ -76,18 +121,24 @@ def main():
             
     # Start the bot
     try:
-        if 'RENDER' in os.environ:
-            # Webhook configuration for Render
-            webhook_url = f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME')}/{BOT_TOKEN}"
-            app.run_webhook(
-                listen="0.0.0.0",
+        if 'RENDER' in os.environ or 'WEBHOOK' in os.environ:
+            # Webhook configuration for production
+            web_app = create_web_app(app)
+            
+            @web_app.on_event("startup")
+            async def on_startup():
+                await app.initialize()
+                await app.start()
+                webhook_url = f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME')}/{BOT_TOKEN}"
+                await app.bot.set_webhook(webhook_url)
+                logger.info(f"🌐 Webhook configured at {webhook_url}")
+            
+            uvicorn.run(
+                web_app,
+                host="0.0.0.0",
                 port=port,
-                webhook_url=webhook_url,
-                url_path=BOT_TOKEN,
-                allowed_updates=['message', 'callback_query'],
-                drop_pending_updates=True
+                ssl_certfile=None,
             )
-            logger.info(f"🌐 Webhook configured at {webhook_url}")
         else:
             # Use polling for local development
             app.run_polling(
