@@ -11,6 +11,9 @@ from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler, 
     ConversationHandler, MessageHandler, filters
 )
+import asyncio
+from telegram.ext import ApplicationBuilder, CommandHandler
+from bot_handlers import start, start_command
 
 from config import BOT_TOKEN, PLATFORM_SELECTION, PRODUCT_SEARCH, CATEGORY_SEARCH
 from bot_handlers import (
