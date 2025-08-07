@@ -15,7 +15,24 @@ from bot_handlers import (
     handle_product_search, handle_invalid_input, cancel_conversation,
     handle_text_message, error_handler
 )
+# webhook templates
+from flask import Flask, render_template
+import os
 
+app = Flask(__name__, template_folder='templates')
+
+@app.route('/')
+def homepage():
+    return render_template('index.html')
+
+@app.route('/health')
+def health_check():
+    return "✅ Server is running", 200
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))  # Default to port 5000
+    app.run(host='0.0.0.0', port=port)
+    
 # Enable logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
