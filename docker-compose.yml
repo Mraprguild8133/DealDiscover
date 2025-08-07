@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  movie-bot:
+    build: .
+    container_name: telegram-movie-bot
+    ports:
+      - "5000:5000"
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    volumes:
+      - bot_logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:5000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - bot-network
+
+volumes:
+  bot_logs:
+
+networks:
+  bot-network:
+    driver: bridge
