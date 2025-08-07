@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopSavvy - Telegram Shopping Bot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            color: white;
+            padding: 5rem 0;
+            margin-bottom: 3rem;
+        }
+        .bot-card {
+            transition: transform 0.3s;
+            margin-bottom: 2rem;
+        }
+        .bot-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .status-badge {
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold">ShopSavvy</h1>
+            <p class="lead">Your smart shopping assistant on Telegram</p>
+            <a href="https://t.me/{{ bot_username }}" class="btn btn-light btn-lg mt-3">
+                Start Chatting <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card bot-card">
+                    <div class="card-body">
+                        <h5 class="card-title">🛍️ Find Deals</h5>
+                        <p class="card-text">Discover the best prices across major Indian e-commerce platforms.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bot-card">
+                    <div class="card-body">
+                        <h5 class="card-title">🔔 Price Alerts</h5>
+                        <p class="card-text">Set notifications for price drops on your favorite products.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bot-card">
+                    <div class="card-body">
+                        <h5 class="card-title">📊 Compare Prices</h5>
+                        <p class="card-text">See prices from multiple sellers at a glance.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-5">
+            <div class="col-md-6 offset-md-3 text-center">
+                <div class="card">
+                    <div class="card-header">
+                        Bot Status
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">ShopSavvy Bot</h5>
+                        <span class="badge bg-success status-badge">Online</span>
+                        <p class="card-text mt-3">Version 1.0.0</p>
+                        <a href="/status" class="btn btn-outline-primary">API Status</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-light text-center text-lg-start mt-5">
+        <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.05);">
+            © 2023 ShopSavvy - All Rights Reserved
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+  </html>
