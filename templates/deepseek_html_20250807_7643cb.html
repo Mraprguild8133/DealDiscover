@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopSavvy - Real-Time Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #6e8efb;
+            --secondary-color: #a777e3;
+            --dark-color: #2c3e50;
+            --light-color: #f8f9fa;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: #f5f7fa;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 6rem 0 5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .real-time-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 16px;
+            height: 16px;
+            background-color: #4CAF50;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+        }
+        
+        .stat-card {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary-color);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            transition: all 0.5s ease;
+        }
+        
+        .stat-label {
+            color: var(--dark-color);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .activity-item {
+            border-left: 3px solid var(--primary-color);
+            padding-left: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .activity-item:hover {
+            background-color: rgba(110, 142, 251, 0.05);
+        }
+        
+        .websocket-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">ShopSavvy</h1>
+            <p class="lead mb-4">Real-Time Shopping Bot Dashboard</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="https://t.me/ShopSavvyBot" class="btn btn-light btn-lg" target="_blank">
+                    <i class="bi bi-telegram"></i> Open Bot
+                </a>
+                <button class="btn btn-outline-light btn-lg" id="connectWs">
+                    <i class="bi bi-plug"></i> Connect Live
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-5">
+        <div class="row">
+            <!-- Real-Time Stats -->
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <div class="real-time-badge"></div>
+                        <div class="stat-value" id="totalUsers">0</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <div class="real-time-badge"></div>
+                        <div class="stat-value" id="activeToday">0</div>
+                        <div class="stat-label">Active Today</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <div class="real-time-badge"></div>
+                        <div class="stat-value" id="searches">0</div>
+                        <div class="stat-label">Searches</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <div class="real-time-badge"></div>
+                        <div class="stat-value" id="alerts">0</div>
+                        <div class="stat-label">Price Alerts</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <!-- Live Activity Feed -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-activity"></i> Live Activity</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="activityFeed" style="max-height: 400px; overflow-y: auto;">
+                            <div class="activity-item">
+                                <small class="text-muted">System initialized...</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Webhook Status -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="bi bi-robot"></i> Bot Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Status:</span>
+                                <span class="badge bg-success" id="botStatus">Online</span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Webhook:</span>
+                                <span class="badge" id="webhookStatus">Checking...</span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Uptime:</span>
+                                <span id="uptime">00:00:00</span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Version:</span>
+                                <span>v1.2.0</span>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <button class="btn btn-sm btn-outline-primary w-100" id="refreshWebhook">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh Status
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Alerts -->
+                <div class="card mt-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Recent Alerts</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="priceAlertsFeed" style="max-height: 200px; overflow-y: auto;">
+                            <div class="alert alert-warning p-2 mb-2">
+                                <small>System initialized...</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WebSocket Status Indicator -->
+    <div class="websocket-status bg-success text-white" id="wsStatus">
+        <i class="bi bi-wifi"></i> Connecting...
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // WebSocket connection
+        let socket;
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+        const reconnectDelay = 3000;
+        
+        // Uptime counter
+        let uptimeSeconds = 0;
+        const uptimeInterval = setInterval(() => {
+            uptimeSeconds++;
+            const hours = Math.floor(uptimeSeconds / 3600);
+            const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+            const seconds = uptimeSeconds % 60;
+            document.getElementById('uptime').textContent = 
+                `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }, 1000);
+        
+        // Connect to WebSocket
+        function connectWebSocket() {
+            // For Render.com, use your live URL (replace with your actual WebSocket endpoint)
+            const wsUrl = window.location.host.includes('onrender.com') 
+                ? `wss://${window.location.host}/ws`
+                : 'ws://localhost:3000/ws';
+                
+            socket = new WebSocket(wsUrl);
+            
+            socket.onopen = function(e) {
+                console.log("WebSocket connection established");
+                updateWsStatus('connected');
+                reconnectAttempts = 0;
+            };
+            
+            socket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                console.log("Message received:", data);
+                processWebSocketMessage(data);
+            };
+            
+            socket.onclose = function(event) {
+                if (event.wasClean) {
+                    console.log(`WebSocket connection closed cleanly, code=${event.code}, reason=${event.reason}`);
+                } else {
+                    console.log('WebSocket connection died');
+                }
+                updateWsStatus('disconnected');
+                
+                // Attempt to reconnect
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    reconnectAttempts++;
+                    console.log(`Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`);
+                    setTimeout(connectWebSocket, reconnectDelay);
+                }
+            };
+            
+            socket.onerror = function(error) {
+                console.log("WebSocket error:", error);
+                updateWsStatus('error');
+            };
+        }
+        
+        // Process incoming WebSocket messages
+        function processWebSocketMessage(data) {
+            // Update stats
+            if (data.type === 'stats') {
+                document.getElementById('totalUsers').textContent = data.totalUsers.toLocaleString();
+                document.getElementById('activeToday').textContent = data.activeToday.toLocaleString();
+                document.getElementById('searches').textContent = data.searches.toLocaleString();
+                document.getElementById('alerts').textContent = data.alerts.toLocaleString();
+                
+                // Animate the stat change
+                document.querySelectorAll('.stat-value').forEach(el => {
+                    el.style.transform = 'scale(1.1)';
+                    setTimeout(() => {
+                        el.style.transform = 'scale(1)';
+                    }, 300);
+                });
+            }
+            
+            // Add activity log
+            if (data.type === 'activity') {
+                const activityFeed = document.getElementById('activityFeed');
+                const activityItem = document.createElement('div');
+                activityItem.className = 'activity-item';
+                activityItem.innerHTML = `
+                    <div class="d-flex justify-content-between">
+                        <strong>${data.action}</strong>
+                        <small class="text-muted">${new Date(data.timestamp).toLocaleTimeString()}</small>
+                    </div>
+                    <small class="text-muted">${data.details || ''}</small>
+                `;
+                activityFeed.prepend(activityItem);
+                
+                // Keep only the last 20 items
+                while (activityFeed.children.length > 20) {
+                    activityFeed.removeChild(activityFeed.lastChild);
+                }
+            }
+            
+            // Add price alert
+            if (data.type === 'priceAlert') {
+                const alertsFeed = document.getElementById('priceAlertsFeed');
+                const alertItem = document.createElement('div');
+                alertItem.className = 'alert alert-warning p-2 mb-2';
+                alertItem.innerHTML = `
+                    <div class="d-flex justify-content-between">
+                        <strong>${data.product}</strong>
+                        <small>${new Date(data.timestamp).toLocaleTimeString()}</small>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Old: ₹${data.oldPrice}</span>
+                        <span>New: ₹${data.newPrice}</span>
+                        <span class="badge bg-${data.difference > 0 ? 'success' : 'danger'}">
+                            ${data.difference > 0 ? '↓' : '↑'} ${Math.abs(data.difference)}%
+                        </span>
+                    </div>
+                `;
+                alertsFeed.prepend(alertItem);
+                
+                // Keep only the last 5 alerts
+                while (alertsFeed.children.length > 5) {
+                    alertsFeed.removeChild(alertsFeed.lastChild);
+                }
+                
+                // Show desktop notification if enabled
+                if (Notification.permission === 'granted') {
+                    new Notification(`Price Alert: ${data.product}`, {
+                        body: `Price changed from ₹${data.oldPrice} to ₹${data.newPrice}`,
+                        icon: 'https://via.placeholder.com/64'
+                    });
+                }
+            }
+            
+            // Update bot status
+            if (data.type === 'status') {
+                const statusBadge = document.getElementById('botStatus');
+                statusBadge.textContent = data.status;
+                statusBadge.className = `badge bg-${data.status === 'online' ? 'success' : 'danger'}`;
+                
+                const webhookBadge = document.getElementById('webhookStatus');
+                webhookBadge.textContent = data.webhook ? 'Active' : 'Inactive';
+                webhookBadge.className = `badge bg-${data.webhook ? 'success' : 'warning'}`;
+            }
+        }
+        
+        // Update WebSocket connection status UI
+        function updateWsStatus(status) {
+            const wsStatus = document.getElementById('wsStatus');
+            switch(status) {
+                case 'connected':
+                    wsStatus.innerHTML = '<i class="bi bi-wifi"></i> Live Connected';
+                    wsStatus.className = 'websocket-status bg-success text-white';
+                    break;
+                case 'disconnected':
+                    wsStatus.innerHTML = '<i class="bi bi-wifi-off"></i> Disconnected';
+                    wsStatus.className = 'websocket-status bg-danger text-white';
+                    break;
+                case 'error':
+                    wsStatus.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Connection Error';
+                    wsStatus.className = 'websocket-status bg-warning text-dark';
+                    break;
+                case 'connecting':
+                    wsStatus.innerHTML = '<i class="bi bi-arrow-repeat"></i> Connecting...';
+                    wsStatus.className = 'websocket-status bg-info text-white';
+                    break;
+            }
+        }
+        
+        // Request notification permission
+        function requestNotificationPermission() {
+            if (!("Notification" in window)) {
+                console.log("This browser does not support desktop notification");
+            } else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        console.log("Notification permission granted");
+                    }
+                });
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Connect to WebSocket
+            connectWebSocket();
+            
+            // Set up manual connect button
+            document.getElementById('connectWs').addEventListener('click', function() {
+                if (socket && socket.readyState === WebSocket.OPEN) {
+                    alert('Already connected to live feed');
+                } else {
+                    updateWsStatus('connecting');
+                    connectWebSocket();
+                }
+            });
+            
+            // Set up refresh button
+            document.getElementById('refreshWebhook').addEventListener('click', function() {
+                if (socket && socket.readyState === WebSocket.OPEN) {
+                    socket.send(JSON.stringify({ type: 'request', data: 'status' }));
+                } else {
+                    alert('Not connected to live feed');
+                }
+            });
+            
+            // Request notification permission
+            requestNotificationPermission();
+            
+            // Simulate initial data (in a real app, this would come from the server)
+            setTimeout(() => {
+                processWebSocketMessage({
+                    type: 'stats',
+                    totalUsers: 1428,
+                    activeToday: 217,
+                    searches: 5843,
+                    alerts: 326
+                });
+                
+                processWebSocketMessage({
+                    type: 'status',
+                    status: 'online',
+                    webhook: true
+                });
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
