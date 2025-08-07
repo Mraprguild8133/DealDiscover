@@ -69,7 +69,19 @@ def main():
     
     logger.info("🤖 ShopSavvy Bot is starting...")
     logger.info("🔍 Ready to help users find the best deals!")
-    
+
+    # Start Flask server
+        port = int(os.getenv('PORT', 5000))
+        app.run(host='0.0.0.0', port=port)
+    else:
+        logger.info("🔧 Running in development mode (polling)")
+        try:
+            # Use polling for development
+            telegram_app.run_polling(
+                allowed_updates=['message', 'callback_query'],
+                drop_pending_updates=True
+            )
+            
     # Start the bot
     try:
         # Use polling for development (webhook for production)
