@@ -1,27 +1,12 @@
 """
-ShopSavvy Bot Configuration (Render.com compatible)
-Complete configuration with all required settings
+Configuration file for the Telegram bot
 """
-
 import os
 import logging
-from typing import Dict, List, Optional
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Bot configuration
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "your_bot_token_here")
 
-# ======================
-# Core Bot Configuration
-# ======================
-class BotConfig:
-    TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
-    NAME: str = os.getenv("BOT_NAME", "ShopSavvy")
-    ADMIN_IDS: List[int] = [int(id) for id in os.getenv("ADMIN_IDS", "").split(",") if id]
-    DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
-    MAINTENANCE: bool = os.getenv("MAINTENANCE", "False").lower() == "true"
-
-# ======================
 # Server Configuration
 # ======================
 class ServerConfig:
@@ -37,90 +22,38 @@ class WebhookConfig:
     PATH: str = f"/webhook/{BotConfig.TOKEN}"
     FULL_URL: str = f"{URL}{PATH}" if URL else ""
     SECRET: Optional[str] = os.getenv("WEBHOOK_SECRET")
-
-# ======================
-# Database Configuration
-# ======================
-class DatabaseConfig:
-    URL: str = os.getenv("DATABASE_URL", "sqlite:///deals.db")
-    ECHO: bool = os.getenv("DB_ECHO", "False").lower() == "true"
-    POOL_SIZE: int = int(os.getenv("DB_POOL_SIZE", "5"))
-
-# ======================
-# E-commerce Platforms
-# ======================
-PLATFORMS: Dict[str, Dict[str, str]] = {
-    'flipkart': {
-        'name': 'Flipkart',
-        'emoji': '🛒',
-        'base_url': 'https://www.flipkart.com'
-    },
-    'amazon': {
-        'name': 'Amazon',
-        'emoji': '📦',
-        'base_url': 'https://www.amazon.in'
-    },
-    'meesho': {
-        'name': 'Meesho',
-        'emoji': '🛍️',
-        'base_url': 'https://www.meesho.com'
-    },
-    'myntra': {
-        'name': 'Myntra',
-        'emoji': '👗',
-        'base_url': 'https://www.myntra.com'
-    }
-}
-
-# ======================
-# Product Categories
-# ======================
-CATEGORIES: Dict[str, List[str]] = {
-    'electronics': ['Mobile', 'Laptop', 'Tablet', 'Camera', 'Headphones'],
-    'fashion': ['Shirt', 'Jeans', 'Dress', 'Shoes', 'Watch'],
-    'home': ['Furniture', 'Appliances', 'Decor', 'Kitchenware'],
-    'beauty': ['Skincare', 'Makeup', 'Haircare', 'Fragrance']
-}
-
-# ======================
-# Deal Types
-# ======================
-DEAL_TYPES: Dict[str, str] = {
-    'percentage': 'Percentage Discount',
-    'bogo': 'Buy One Get One',
-    'cashback': 'Cashback Offer',
-    'clearance': 'Clearance Sale',
-    'festival': 'Festival Special'
-}
-
-# ======================
-# Conversation States
-# ======================
-class States:
-    (
-        START,
-        PLATFORM_SELECTION,
-        PRODUCT_SEARCH,
-        CATEGORY_SELECTION,
-        DEAL_TYPE_SELECTION,
-        PRICE_ALERT_SETUP,
-        FEEDBACK,
-        ADMIN_PANEL
-    ) = range(8)
-
-# ======================
-# Logging Configuration
-# ======================
+    
+# Logging configuration
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.DEBUG if BotConfig.DEBUG else logging.INFO,
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('shopsavvy.log')
-    ]
+    level=logging.INFO
 )
-logger = logging.getLogger(__name__)
 
+# Conversation states
+(PLATFORM_SELECTION, PRODUCT_SEARCH, CATEGORY_SEARCH, 
+ DEAL_TYPE_SELECTION, PRICE_ALERT) = range(5)
+
+# Platform emojis
+PLATFORM_EMOJIS = {
+    'flipkart': '🛒',
+    'amazon': '📦',
+    'meesho': '🛍️',
+    'myntra': '👗',
+    'all': '🔍'
+}
+
+# Categories
+CATEGORIES = [
+    'Mobile', 'Television', 'Shirt', 'Electronics', 'Fashion', 
+    'Home & Kitchen', 'Books', 'Sports & Fitness', 
+    'Beauty & Personal Care', 'Automotive'
+]
+
+# Deal types
+DEAL_TYPES = [
+    'Percentage Discounts', 'BOGO Offers', 'Bank Discounts', 
+    'Clearance Sales', 'Cashback Offers'
+]
 # ======================
 # Configuration Validation
 # ======================
